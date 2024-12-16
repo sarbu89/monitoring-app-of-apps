@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+      - name: tempo
+        image: grafana/tempo:latest
+        command: ["tempo", "-config.file=/etc/tempo.yaml"]
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - name: tempo-config
+          mountPath: /etc
+        - name: storage
+          mountPath: /traces
+        ports:
+        - containerPort: 3200 # http
+        - containerPort: 4317 # otlp grpc
+      volumes:
+      - name: tempo-config
+        configMap:
+          name: tempo-config
+      - name: storage
+        emptyDir: {}
